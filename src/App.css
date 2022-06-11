@@ -53,18 +53,28 @@ a {
 /* VISUALIZER */
 .visualizer {
   height: 95vh;
+  overflow: hidden;
 }
 
 .bar-container {
   height: 80vh;
   width: 100%;
   border: 2px solid black;
+  display: flex;
+  flex-direction: row-reverse;
+  -webkit-transform: rotateX(180deg);
+  transform: rotateX(180deg);
 }
 
 .main-controls,
 .secondary-controls {
   gap: 45px;
   padding: 5px;
+}
+/* BARS */
+
+.bar {
+  margin: 0 0.5px;
 }
 
 /* FOOTER STYLES */
@@ -73,6 +83,7 @@ a {
   width: 100%;
   /* margin-top: 20vh; */
 }
+
 .footer ul {
   gap: 40px;
   list-style: none;

@@ -1,5 +1,6 @@
-import React, { useReducer } from "react";
+import React, { useReducer, useState, useEffect } from "react";
 import { Actions, ALGORITHMS, FIELDS } from "../VisualizerEnums";
+import Bars from "./Bars";
 
 function reducer(state: SettingState, action) {
   switch (action.type) {
@@ -20,8 +21,8 @@ const settingsInitialState: SettingState = {
   algorithm_type: "",
   visualization_size: "",
   visualization_speed: "",
-  background_color: "",
-  bar_color: "",
+  background_color: "#ffffff",
+  bar_color: "#000000",
 };
 
 const Visualizer: React.FC = () => {
@@ -34,6 +35,22 @@ const Visualizer: React.FC = () => {
     bar_color,
   } = state;
 
+  const [array, setArray] = useState([]);
+  const [maxArraySize, setMaxArraySize] = useState(0);
+  useEffect(() => {
+    const barContainerPixels =
+      document.getElementById("bar-container").clientWidth;
+    setMaxArraySize(barContainerPixels);
+  }, []);
+  useEffect(() => {
+    const tempArray = [];
+    const limit = parseInt(state.visualization_size);
+    for (let i = 0; i < limit; i++) {
+      tempArray.push(Math.floor(Math.random() * (500 - 5 + 1) + 5));
+    }
+    setArray(tempArray);
+    console.log(tempArray);
+  }, [state.visualization_size]);
   return (
     <React.Fragment>
       <div
@@ -44,8 +61,15 @@ const Visualizer: React.FC = () => {
       >
         <div
           className="bar-container"
+          id="bar-container"
           style={{ backgroundColor: background_color }}
-        ></div>
+        >
+          <Bars
+            arrayData={array}
+            barColor={state.bar_color}
+            maxArraySize={maxArraySize}
+          />
+        </div>
 
         <div className="main-controls flex mt-2 ">
           <div>
@@ -76,8 +100,8 @@ const Visualizer: React.FC = () => {
             <label htmlFor={FIELDS.SIZE}>Size: &nbsp;</label>
             <input
               type="range"
-              min={0}
-              max={100}
+              min={10}
+              max={maxArraySize}
               step={10}
               name={FIELDS.SIZE}
               id={FIELDS.SIZE}
@@ -114,6 +138,7 @@ const Visualizer: React.FC = () => {
               type="color"
               name={FIELDS.BAR_COLOR}
               id={FIELDS.BAR_COLOR}
+              defaultValue={"#000000"}
               onChange={(e) =>
                 dispatch({
                   type: Actions.FIELDS,
@@ -129,6 +154,7 @@ const Visualizer: React.FC = () => {
               type="color"
               name={FIELDS.BG_COLOR}
               id={FIELDS.BG_COLOR}
+              defaultValue={"#ffffff"}
               onChange={(e) =>
                 dispatch({
                   type: Actions.FIELDS,
