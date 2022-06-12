@@ -10,17 +10,20 @@ interface BarProps {
 const Bars: React.FC<BarProps> = (props) => {
   const max = Math.max(...props.arrayData);
   const length = props.arrayData.length;
+
   return (
     <React.Fragment>
       {props.arrayData.map((data, i) => {
+        const heightValue = (100 / max) * data;
         return (
           <div
             key={i}
             className="bar"
+            id={`val-${data}`}
             style={{
               backgroundColor: props.barColor,
-              height: `${(100 / max) * data}%`,
-              width: `${Math.ceil(props.maxArraySize / length)}px`,
+              height: `${heightValue}%`,
+              width: `${props.maxArraySize / length}px`,
             }}
           >
             {/* {data} */}

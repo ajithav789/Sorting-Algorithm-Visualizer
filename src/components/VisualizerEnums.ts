@@ -1,5 +1,7 @@
 export enum Actions {
   FIELDS = "fields",
+  RESET = "reset",
+  UPDATE_ARRAY = "update_array",
 }
 export enum FIELDS {
   ALGORITHM = "algorithm_type",
@@ -7,6 +9,8 @@ export enum FIELDS {
   SPEED = "visualization_speed",
   BG_COLOR = "background_color",
   BAR_COLOR = "bar_color",
+  COMPARISON_COLOR = "comparison_color",
+  SORTED_COLOR = "sorted_color",
 }
 
 export enum ALGORITHMS {

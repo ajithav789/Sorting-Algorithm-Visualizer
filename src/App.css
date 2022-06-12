@@ -52,20 +52,31 @@ a {
 
 /* VISUALIZER */
 .visualizer {
-  height: 95vh;
-  overflow: hidden;
+  /* height: 95vh;
+  overflow: hidden; */
 }
 
 .bar-container {
+  padding: 3px;
   height: 80vh;
   width: 100%;
   border: 2px solid black;
   display: flex;
   flex-direction: row-reverse;
-  -webkit-transform: rotateX(180deg);
-  transform: rotateX(180deg);
+  /* transition: 0.2s all ease; */
+  gap: 0px 1px;
 }
 
+.rotateX {
+  -webkit-transform: rotateX(180deg);
+  transform: rotateX(180deg);
+  /* transition: 0.2s all ease; */
+}
+.rotateY {
+  -webkit-transform: rotateY(180deg);
+  transform: rotateY(180deg);
+  /* transition: 0.2s all ease; */
+}
 .main-controls,
 .secondary-controls {
   gap: 45px;
@@ -74,7 +85,10 @@ a {
 /* BARS */
 
 .bar {
-  margin: 0 0.5px;
+  transition: 0.08s all ease;
+}
+.bar:hover {
+  filter: brightness(90%);
 }
 
 /* FOOTER STYLES */
