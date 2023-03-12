@@ -1,4 +1,7 @@
 import React, { useReducer, useState, useEffect } from "react";
+import { bubble } from "../Algorithms/bubble-sort";
+import { insertion } from "../Algorithms/insertion-sort";
+import { selection } from "../Algorithms/selection";
 import { Actions, ALGORITHMS, FIELDS } from "../VisualizerEnums";
 import Bars from "./Bars";
 
@@ -45,39 +48,17 @@ const Visualizer: React.FC = () => {
   const [maxArraySize, setMaxArraySize] = useState(0);
   const [rotateX, setRotateX] = useState(true);
   const [rotateY, setRotateY] = useState(false);
+  const [isSortingOnGoing, setIsSortingOnGoing] = useState(false);
   useEffect(() => {
     const barContainerPixels =
       document.getElementById("bar-container").clientWidth;
     setMaxArraySize(barContainerPixels);
   }, []);
+
   useEffect(() => {
     randomizeArray();
   }, [visualization_size]);
-  var audioCtx = new window.AudioContext();
 
-  function beep(duration?, frequency?, volume?, type?, callback?) {
-    var oscillator = audioCtx.createOscillator();
-    var gainNode = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    if (volume) {
-      gainNode.gain.value = volume;
-    }
-    if (frequency) {
-      oscillator.frequency.value = frequency;
-    }
-    if (type) {
-      oscillator.type = type;
-    }
-    if (callback) {
-      oscillator.onended = callback;
-    }
-
-    oscillator.start(audioCtx.currentTime);
-    oscillator.stop(audioCtx.currentTime + (duration || 500) / 1000);
-  }
   const randomizeArray = () => {
     const ele = document.querySelectorAll(".bar") as any;
     ele.forEach((element) => {
@@ -90,52 +71,39 @@ const Visualizer: React.FC = () => {
     }
     setArray(tempArray);
   };
-  function waitforme(milisec) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve("");
-      }, milisec);
-    });
-  }
 
-  async function bubble() {
-    const ele = document.querySelectorAll(".bar") as any;
-    for (let i = 0; i < ele.length - 1; i++) {
-      for (let j = 0; j < ele.length - i - 1; j++) {
-        ele[j].style.background = comparison_color;
-        ele[j + 1].style.background = comparison_color;
-        if (
-          parseFloat(ele[j].style.height) < parseFloat(ele[j + 1].style.height)
-        ) {
-          await waitforme(Math.abs(visualization_speed - 100));
-          swap(ele[j], ele[j + 1]);
-        }
-        ele[j].style.background = bar_color;
-        ele[j + 1].style.background = bar_color;
-      }
-      ele[ele.length - 1 - i].style.background = sorted_color;
-      beep(
-        40,
-        15 * parseFloat(ele[ele.length - 1 - i].style.height),
-        0.3,
-        "sine"
-      );
-    }
-    ele[0].style.background = sorted_color;
-  }
-  function swap(el1, el2) {
-    let temp = el1.style.height;
-    el1.style.height = el2.style.height;
-    el2.style.height = temp;
-  }
-  const startVisualization = () => {
+  const startVisualization = async () => {
+    setIsSortingOnGoing(true);
     switch (algorithm_type) {
       case ALGORITHMS.BUBBLE_SORT:
-        bubble();
+        await bubble(
+          visualization_speed,
+          comparison_color,
+          bar_color,
+          sorted_color
+        );
+
+        break;
+      case ALGORITHMS.INSERTION_SORT:
+        await insertion(
+          visualization_speed,
+          comparison_color,
+          bar_color,
+          sorted_color
+        );
+        break;
+      case ALGORITHMS.SELECTION_SORT:
+        await selection(
+          visualization_speed,
+          comparison_color,
+          bar_color,
+          sorted_color
+        );
         break;
       default:
         break;
     }
+    setIsSortingOnGoing(false);
   };
 
   return (
@@ -171,13 +139,13 @@ const Visualizer: React.FC = () => {
             >
               <option value={ALGORITHMS.BUBBLE_SORT}>Bubble Sort</option>
               <option value={ALGORITHMS.INSERTION_SORT}>Insertion Sort</option>
-              <option value={ALGORITHMS.MERGE_SORT}>Merge Sort</option>
               <option value={ALGORITHMS.SELECTION_SORT}>Selection Sort</option>
             </select>
           </div>
 
           <button
             className="btn-primary"
+            disabled={isSortingOnGoing}
             onClick={() => {
               setRotateX(!rotateX);
             }}
@@ -186,13 +154,18 @@ const Visualizer: React.FC = () => {
           </button>
           <button
             className="btn-primary"
+            disabled={isSortingOnGoing}
             onClick={() => {
               setRotateY(!rotateY);
             }}
           >
             Rotate Y
           </button>
-          <button className="btn-primary" onClick={randomizeArray}>
+          <button
+            className="btn-primary"
+            onClick={randomizeArray}
+            disabled={isSortingOnGoing}
+          >
             Randomize Array
           </button>
           <button
@@ -203,7 +176,11 @@ const Visualizer: React.FC = () => {
           >
             Reload
           </button>
-          <button className="btn-primary" onClick={startVisualization}>
+          <button
+            className="btn-primary"
+            disabled={isSortingOnGoing}
+            onClick={startVisualization}
+          >
             Start Visualization
           </button>
         </div>
@@ -214,6 +191,7 @@ const Visualizer: React.FC = () => {
               type="range"
               min={10}
               max={250}
+              disabled={isSortingOnGoing}
               step={5}
               name={FIELDS.SIZE}
               id={FIELDS.SIZE}
@@ -244,77 +222,89 @@ const Visualizer: React.FC = () => {
               }
             />
           </div>
-          <div className="flex">
-            <label htmlFor={FIELDS.BAR_COLOR}>Bar Color: &nbsp;</label>
-            <input
-              type="color"
-              name={FIELDS.BAR_COLOR}
-              id={FIELDS.BAR_COLOR}
-              defaultValue={bar_color}
-              onChange={(e) =>
-                dispatch({
-                  type: Actions.FIELDS,
-                  field: FIELDS.BAR_COLOR,
-                  payload: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="flex">
-            <label htmlFor={FIELDS.BG_COLOR}>Background Color: &nbsp;</label>
-            <input
-              type="color"
-              name={FIELDS.BG_COLOR}
-              id={FIELDS.BG_COLOR}
-              defaultValue={"#ffffff"}
-              onChange={(e) =>
-                dispatch({
-                  type: Actions.FIELDS,
-                  field: FIELDS.BG_COLOR,
-                  payload: e.target.value,
-                })
-              }
-            />
-          </div>
+          {state.algorithm_type !== ALGORITHMS.SELECTION_SORT ? (
+            <div className="flex">
+              <label htmlFor={FIELDS.BAR_COLOR}>Bar Color: &nbsp;</label>
+              <input
+                type="color"
+                name={FIELDS.BAR_COLOR}
+                id={FIELDS.BAR_COLOR}
+                defaultValue={bar_color}
+                onChange={(e) =>
+                  dispatch({
+                    type: Actions.FIELDS,
+                    field: FIELDS.BAR_COLOR,
+                    payload: e.target.value,
+                  })
+                }
+              />
+            </div>
+          ) : (
+            <></>
+          )}
+          {state.algorithm_type !== ALGORITHMS.SELECTION_SORT ? (
+            <div className="flex">
+              <label htmlFor={FIELDS.BG_COLOR}>Background Color: &nbsp;</label>
+              <input
+                type="color"
+                name={FIELDS.BG_COLOR}
+                id={FIELDS.BG_COLOR}
+                defaultValue={"#ffffff"}
+                onChange={(e) =>
+                  dispatch({
+                    type: Actions.FIELDS,
+                    field: FIELDS.BG_COLOR,
+                    payload: e.target.value,
+                  })
+                }
+              />
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
-        <div className="secondary-controls flex mt-2">
-          <div className="flex">
-            <label htmlFor={FIELDS.COMPARISON_COLOR}>
-              Comparison Bar Color: &nbsp;
-            </label>
-            <input
-              type="color"
-              name={FIELDS.COMPARISON_COLOR}
-              id={FIELDS.COMPARISON_COLOR}
-              defaultValue={"#003399"}
-              onChange={(e) =>
-                dispatch({
-                  type: Actions.FIELDS,
-                  field: FIELDS.COMPARISON_COLOR,
-                  payload: e.target.value,
-                })
-              }
-            />
+        {state.algorithm_type !== ALGORITHMS.SELECTION_SORT ? (
+          <div className="secondary-controls flex mt-2">
+            <div className="flex">
+              <label htmlFor={FIELDS.COMPARISON_COLOR}>
+                Comparison Bar Color: &nbsp;
+              </label>
+              <input
+                type="color"
+                name={FIELDS.COMPARISON_COLOR}
+                id={FIELDS.COMPARISON_COLOR}
+                defaultValue={"#003399"}
+                onChange={(e) =>
+                  dispatch({
+                    type: Actions.FIELDS,
+                    field: FIELDS.COMPARISON_COLOR,
+                    payload: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="flex">
+              <label htmlFor={FIELDS.SORTED_COLOR}>
+                Sorted Bar Color: &nbsp;
+              </label>
+              <input
+                type="color"
+                name={FIELDS.SORTED_COLOR}
+                id={FIELDS.SORTED_COLOR}
+                defaultValue={"#009900"}
+                onChange={(e) =>
+                  dispatch({
+                    type: Actions.FIELDS,
+                    field: FIELDS.SORTED_COLOR,
+                    payload: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
-          <div className="flex">
-            <label htmlFor={FIELDS.SORTED_COLOR}>
-              Sorted Bar Color: &nbsp;
-            </label>
-            <input
-              type="color"
-              name={FIELDS.SORTED_COLOR}
-              id={FIELDS.SORTED_COLOR}
-              defaultValue={"#009900"}
-              onChange={(e) =>
-                dispatch({
-                  type: Actions.FIELDS,
-                  field: FIELDS.SORTED_COLOR,
-                  payload: e.target.value,
-                })
-              }
-            />
-          </div>
-        </div>
+        ) : (
+          <></>
+        )}
       </div>
     </React.Fragment>
   );
